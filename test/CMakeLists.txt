@@ -8,8 +8,16 @@ endif()
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-find_package(spdlog CONFIG REQUIRED)
-find_package(Catch2 CONFIG REQUIRED)
+find_package(spdlog CONFIG)
+find_package(Catch2 CONFIG)
+
+if (NOT spdlog_FOUND)
+    add_subdirectory(submodules/spdlog)
+endif ()
+
+if (NOT Catch2_FOUND)
+    add_subdirectory(submodules/Catch2)
+endif ()
 
 set(TESTS_SOFTDEVICE_V2 )
 set(TESTS_SOFTDEVICE_V3 )

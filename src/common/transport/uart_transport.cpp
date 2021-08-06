@@ -53,7 +53,7 @@
 #endif
 
 #include "uart_settings_boost.h"
-#include <asio.hpp>
+#include <boost/asio.hpp>
 
 constexpr auto DELAY_BEFORE_READ_WRITE = std::chrono::milliseconds(200);
 
@@ -76,16 +76,16 @@ struct UartTransport::impl : Transport
     bool isOpen;
     std::recursive_mutex isOpenMutex;
 
-    std::function<void(const asio::error_code, const size_t)> callbackReadHandle;
-    std::function<void(const asio::error_code, const size_t)> callbackWriteHandle;
+    std::function<void(const boost::system::error_code, const size_t)> callbackReadHandle;
+    std::function<void(const boost::system::error_code, const size_t)> callbackWriteHandle;
 
     UartSettingsBoost uartSettingsBoost;
     bool asyncWriteInProgress;
     std::unique_ptr<std::thread> ioServiceThread;
 
-    std::unique_ptr<asio::io_service> ioService;
-    std::unique_ptr<asio::serial_port> serialPort;
-    std::unique_ptr<asio::executor_work_guard<asio::io_context::executor_type>> workNotifier;
+    std::unique_ptr<boost::asio::io_service> ioService;
+    std::unique_ptr<boost::asio::serial_port> serialPort;
+    std::unique_ptr<boost::asio::executor_work_guard<boost::asio::io_context::executor_type>> workNotifier;
 
     impl(const UartCommunicationParameters &communicationParameters)
         : readBuffer()
@@ -98,7 +98,7 @@ struct UartTransport::impl : Transport
     /**
      *@brief Called when background thread receives bytes from uart.
      */
-    void readHandler(const asio::error_code &errorCode, const size_t bytesTransferred)
+    void readHandler(const boost::system::error_code &errorCode, const size_t bytesTransferred)
     {
         if (!errorCode)
         {
@@ -111,7 +111,7 @@ struct UartTransport::impl : Transport
 
             asyncRead(); // Initiate a new read
         }
-        else if (errorCode == asio::error::operation_aborted)
+        else if (errorCode == boost::asio::error::operation_aborted)
         {
             std::stringstream message;
             message << "serial port read on port " << uartSettingsBoost.getPortName()
@@ -130,13 +130,13 @@ struct UartTransport::impl : Transport
         }
     }
 
-    void writeHandler(const asio::error_code &errorCode, const size_t bytesTransferred)
+    void writeHandler(const boost::system::error_code &errorCode, const size_t bytesTransferred)
     {
         if (!errorCode)
         {
             asyncWrite();
         }
-        else if (errorCode == asio::error::operation_aborted)
+        else if (errorCode == boost::asio::error::operation_aborted)
         {
             std::stringstream message;
             message << "serial port write operation on port " << uartSettingsBoost.getPortName()
@@ -168,7 +168,7 @@ struct UartTransport::impl : Transport
 
     void asyncRead()
     {
-        const auto mutableReadBuffer = asio::buffer(readBuffer, UartTransportBufferSize);
+        const auto mutableReadBuffer = boost::asio::buffer(readBuffer, UartTransportBufferSize);
         serialPort->async_read_some(mutableReadBuffer, callbackReadHandle);
     }
 
@@ -194,8 +194,8 @@ struct UartTransport::impl : Transport
             writeQueue.clear();
         }
 
-        const auto buffer = asio::buffer(writeBufferVector, writeBufferVector.size());
-        asio::async_write(*serialPort, buffer, callbackWriteHandle);
+        const auto buffer = boost::asio::buffer(writeBufferVector, writeBufferVector.size());
+        boost::asio::async_write(*serialPort, buffer, callbackWriteHandle);
     }
 
     /**
@@ -251,11 +251,11 @@ struct UartTransport::impl : Transport
 
         try
         {
-            ioService  = std::make_unique<asio::io_service>();
-            serialPort = std::make_unique<asio::serial_port>(*ioService);
+            ioService  = std::make_unique<boost::asio::io_service>();
+            serialPort = std::make_unique<boost::asio::serial_port>(*ioService);
             workNotifier =
-                std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(
-                    asio::make_work_guard(*ioService));
+                std::make_unique<boost::asio::executor_work_guard<boost::asio::io_context::executor_type>>(
+                    boost::asio::make_work_guard(*ioService));
 
             std::this_thread::sleep_for(DELAY_BEFORE_OPEN);
             serialPort->open(portName);
@@ -271,7 +271,7 @@ struct UartTransport::impl : Transport
             serialPort->set_option(characterSize);
 
 #if !defined(__APPLE__)
-            asio::serial_port::baud_rate baudRate;
+            boost::asio::serial_port::baud_rate baudRate;
 
             // Set requested baud rate
             baudRate = uartSettingsBoost.getBoostBaudRate();
