@@ -59,7 +59,8 @@ AdapterInternal::~AdapterInternal()
 
 uint32_t AdapterInternal::open(const sd_rpc_status_handler_t status_callback,
                                const sd_rpc_evt_handler_t event_callback,
-                               const sd_rpc_log_handler_t log_callback)
+                               const sd_rpc_log_handler_t log_callback,
+                               void* user_context)
 {
     std::lock_guard<std::mutex> lck(publicMethodMutex);
 
@@ -73,6 +74,7 @@ uint32_t AdapterInternal::open(const sd_rpc_status_handler_t status_callback,
     statusCallback = status_callback;
     eventCallback  = event_callback;
     logCallback    = log_callback;
+    userContext = user_context;
 
     const auto boundStatusHandler = std::bind(&AdapterInternal::statusHandler, this,
                                               std::placeholders::_1, std::placeholders::_2);
@@ -104,7 +106,7 @@ void AdapterInternal::statusHandler(const sd_rpc_app_status_t code, const std::s
 
     if (statusCallback != nullptr)
     {
-        statusCallback(&adapter, code, message.c_str());
+        statusCallback(&adapter, code, message.c_str(), userContext);
     }
 }
 
@@ -116,7 +118,7 @@ void AdapterInternal::eventHandler(ble_evt_t *event)
 
     if (eventCallback != nullptr)
     {
-        eventCallback(&adapter, event);
+        eventCallback(&adapter, event, userContext);
     }
 }
 
@@ -129,7 +131,7 @@ void AdapterInternal::logHandler(const sd_rpc_log_severity_t severity,
     if (logCallback != nullptr &&
         (static_cast<uint32_t>(severity) >= static_cast<uint32_t>(logSeverityFilter)))
     {
-        logCallback(&adapter, severity, log_message.c_str());
+        logCallback(&adapter, severity, log_message.c_str(), userContext);
     }
 }
 
