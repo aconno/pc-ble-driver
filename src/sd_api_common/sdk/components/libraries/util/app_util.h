@@ -1,30 +1,30 @@
 /**
  * Copyright (c) 2012 - 2017, Nordic Semiconductor ASA
- * 
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form, except as embedded into a Nordic
  *    Semiconductor ASA integrated circuit in a product or a software update for
  *    such product, must reproduce the above copyright notice, this list of
  *    conditions and the following disclaimer in the documentation and/or other
  *    materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * 4. This software, with or without modification, must only be used with a
  *    Nordic Semiconductor ASA integrated circuit.
- * 
+ *
  * 5. Any software provided in binary form under this license must not be reverse
  *    engineered, decompiled, modified and/or disassembled.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,7 +35,7 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 /** @file
  *
@@ -52,6 +52,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "../../serialization/common/endianess.h"
 #include "compiler_abstraction.h"
 #include "nordic_common.h"
 #include "nrf.h"
@@ -750,11 +751,14 @@ static __INLINE uint64_t value_rescale(uint32_t value, uint32_t old_unit_reversa
  */
 static __INLINE uint8_t uint16_encode(uint16_t value, uint8_t * p_encoded_data)
 {
+    value = htol_uint16_t(value);
+
     p_encoded_data[0] = (uint8_t) ((value & 0x00FF) >> 0);
     p_encoded_data[1] = (uint8_t) ((value & 0xFF00) >> 8);
     return sizeof(uint16_t);
 }
 
+#if 0
 /**@brief Function for encoding a three-byte value.
  *
  * @param[in]   value            Value to be encoded.
@@ -764,11 +768,14 @@ static __INLINE uint8_t uint16_encode(uint16_t value, uint8_t * p_encoded_data)
  */
 static __INLINE uint8_t uint24_encode(uint32_t value, uint8_t * p_encoded_data)
 {
+    // TODO: byteswap
+
     p_encoded_data[0] = (uint8_t) ((value & 0x000000FF) >> 0);
     p_encoded_data[1] = (uint8_t) ((value & 0x0000FF00) >> 8);
     p_encoded_data[2] = (uint8_t) ((value & 0x00FF0000) >> 16);
     return 3;
 }
+#endif
 
 /**@brief Function for encoding a uint32 value.
  *
@@ -779,6 +786,8 @@ static __INLINE uint8_t uint24_encode(uint32_t value, uint8_t * p_encoded_data)
  */
 static __INLINE uint8_t uint32_encode(uint32_t value, uint8_t * p_encoded_data)
 {
+    value = htol_uint32_t(value);
+
     p_encoded_data[0] = (uint8_t) ((value & 0x000000FF) >> 0);
     p_encoded_data[1] = (uint8_t) ((value & 0x0000FF00) >> 8);
     p_encoded_data[2] = (uint8_t) ((value & 0x00FF0000) >> 16);
@@ -786,6 +795,7 @@ static __INLINE uint8_t uint32_encode(uint32_t value, uint8_t * p_encoded_data)
     return sizeof(uint32_t);
 }
 
+#if 0
 /**@brief Function for encoding a uint48 value.
  *
  * @param[in]   value            Value to be encoded.
@@ -795,6 +805,8 @@ static __INLINE uint8_t uint32_encode(uint32_t value, uint8_t * p_encoded_data)
  */
 static __INLINE uint8_t uint48_encode(uint64_t value, uint8_t * p_encoded_data)
 {
+    // TODO: byteswap
+
     p_encoded_data[0] = (uint8_t) ((value & 0x0000000000FF) >> 0);
     p_encoded_data[1] = (uint8_t) ((value & 0x00000000FF00) >> 8);
     p_encoded_data[2] = (uint8_t) ((value & 0x000000FF0000) >> 16);
@@ -803,6 +815,7 @@ static __INLINE uint8_t uint48_encode(uint64_t value, uint8_t * p_encoded_data)
     p_encoded_data[5] = (uint8_t) ((value & 0xFF0000000000) >> 40);
     return 6;
 }
+#endif
 
 /**@brief Function for decoding a uint16 value.
  *
@@ -812,10 +825,11 @@ static __INLINE uint8_t uint48_encode(uint64_t value, uint8_t * p_encoded_data)
  */
 static __INLINE uint16_t uint16_decode(const uint8_t * p_encoded_data)
 {
-        return ( (((uint16_t)((uint8_t *)p_encoded_data)[0])) |
-                 (((uint16_t)((uint8_t *)p_encoded_data)[1]) << 8 ));
+        return ltoh_uint16_t( (((uint16_t)((uint8_t *)p_encoded_data)[0])) |
+                         (((uint16_t)((uint8_t *)p_encoded_data)[1]) << 8));
 }
 
+#if 0
 /**@brief Function for decoding a uint16 value in big-endian format.
  *
  * @param[in]   p_encoded_data   Buffer where the encoded data is stored.
@@ -824,10 +838,13 @@ static __INLINE uint16_t uint16_decode(const uint8_t * p_encoded_data)
  */
 static __INLINE uint16_t uint16_big_decode(const uint8_t * p_encoded_data)
 {
+    // TODO: byteswap?
         return ( (((uint16_t)((uint8_t *)p_encoded_data)[0]) << 8 ) |
                  (((uint16_t)((uint8_t *)p_encoded_data)[1])) );
 }
+#endif
 
+#if 0
 /**@brief Function for decoding a three-byte value.
  *
  * @param[in]   p_encoded_data   Buffer where the encoded data is stored.
@@ -836,10 +853,12 @@ static __INLINE uint16_t uint16_big_decode(const uint8_t * p_encoded_data)
  */
 static __INLINE uint32_t uint24_decode(const uint8_t * p_encoded_data)
 {
+    // TODO: byteswap?
     return ( (((uint32_t)((uint8_t *)p_encoded_data)[0]) << 0)  |
              (((uint32_t)((uint8_t *)p_encoded_data)[1]) << 8)  |
              (((uint32_t)((uint8_t *)p_encoded_data)[2]) << 16));
 }
+#endif
 
 /**@brief Function for decoding a uint32 value.
  *
@@ -849,12 +868,13 @@ static __INLINE uint32_t uint24_decode(const uint8_t * p_encoded_data)
  */
 static __INLINE uint32_t uint32_decode(const uint8_t * p_encoded_data)
 {
-    return ( (((uint32_t)((uint8_t *)p_encoded_data)[0]) << 0)  |
-             (((uint32_t)((uint8_t *)p_encoded_data)[1]) << 8)  |
-             (((uint32_t)((uint8_t *)p_encoded_data)[2]) << 16) |
-             (((uint32_t)((uint8_t *)p_encoded_data)[3]) << 24 ));
+    return ltoh_uint32_t( (((uint32_t)((uint8_t *)p_encoded_data)[0]) << 0) |
+                         (((uint32_t)((uint8_t *)p_encoded_data)[1]) << 8) |
+                         (((uint32_t)((uint8_t *)p_encoded_data)[2]) << 16) |
+                         (((uint32_t)((uint8_t *)p_encoded_data)[3]) << 24));
 }
 
+#if 0
 /**@brief Function for decoding a uint32 value in big-endian format.
  *
  * @param[in]   p_encoded_data   Buffer where the encoded data is stored.
@@ -863,12 +883,15 @@ static __INLINE uint32_t uint32_decode(const uint8_t * p_encoded_data)
  */
 static __INLINE uint32_t uint32_big_decode(const uint8_t * p_encoded_data)
 {
+    // TODO: byteswap?
     return ( (((uint32_t)((uint8_t *)p_encoded_data)[0]) << 24) |
              (((uint32_t)((uint8_t *)p_encoded_data)[1]) << 16) |
              (((uint32_t)((uint8_t *)p_encoded_data)[2]) << 8)  |
              (((uint32_t)((uint8_t *)p_encoded_data)[3]) << 0) );
 }
+#endif
 
+#if 0
 /**
  * @brief Function for encoding an uint16 value in big-endian format.
  *
@@ -884,7 +907,9 @@ static __INLINE uint8_t uint16_big_encode(uint16_t value, uint8_t * p_encoded_da
 
     return sizeof(uint16_t);
 }
+#endif
 
+#if 0
 /**@brief Function for encoding a uint32 value in big-endian format.
  *
  * @param[in]   value            Value to be encoded.
@@ -897,7 +922,9 @@ static __INLINE uint8_t uint32_big_encode(uint32_t value, uint8_t * p_encoded_da
     *(uint32_t *)p_encoded_data = __REV(value);
     return sizeof(uint32_t);
 }
+#endif
 
+#if 0
 /**@brief Function for decoding a uint48 value.
  *
  * @param[in]   p_encoded_data   Buffer where the encoded data is stored.
@@ -913,6 +940,7 @@ static __INLINE uint64_t uint48_decode(const uint8_t * p_encoded_data)
              (((uint64_t)((uint8_t *)p_encoded_data)[4]) << 32) |
              (((uint64_t)((uint8_t *)p_encoded_data)[5]) << 40 ));
 }
+#endif
 
 /** @brief Function for converting the input voltage (in milli volts) into percentage of 3.0 Volts.
  *

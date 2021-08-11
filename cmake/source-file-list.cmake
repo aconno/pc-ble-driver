@@ -52,6 +52,7 @@ endif()
 # Newer codecs from nRF5 SDK are backwards compatible to SoftDevice API v3
 set(LIB_NEWER_SDK_API_COMMON_C_SRC_FILES
     src/sd_api_common/sdk/components/serialization/common/ble_serialization.c
+    src/sd_api_common/sdk/components/serialization/common/endianess.c
     src/sd_api_common/sdk/components/serialization/common/cond_field_serialization.c
     src/sd_api_common/sdk/components/serialization/common/struct_ser/ble/ble_gap_struct_serialization.c
     src/sd_api_common/sdk/components/serialization/common/struct_ser/ble/ble_gattc_struct_serialization.c
