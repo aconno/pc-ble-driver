@@ -49,13 +49,14 @@
 #ifndef APP_UTIL_H__
 #define APP_UTIL_H__
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
 #include "../../serialization/common/endianess.h"
 #include "compiler_abstraction.h"
 #include "nordic_common.h"
 #include "nrf.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -751,8 +752,6 @@ static __INLINE uint64_t value_rescale(uint32_t value, uint32_t old_unit_reversa
  */
 static __INLINE uint8_t uint16_encode(uint16_t value, uint8_t * p_encoded_data)
 {
-    value = htol_uint16_t(value);
-
     p_encoded_data[0] = (uint8_t) ((value & 0x00FF) >> 0);
     p_encoded_data[1] = (uint8_t) ((value & 0xFF00) >> 8);
     return sizeof(uint16_t);
@@ -786,8 +785,6 @@ static __INLINE uint8_t uint24_encode(uint32_t value, uint8_t * p_encoded_data)
  */
 static __INLINE uint8_t uint32_encode(uint32_t value, uint8_t * p_encoded_data)
 {
-    value = htol_uint32_t(value);
-
     p_encoded_data[0] = (uint8_t) ((value & 0x000000FF) >> 0);
     p_encoded_data[1] = (uint8_t) ((value & 0x0000FF00) >> 8);
     p_encoded_data[2] = (uint8_t) ((value & 0x00FF0000) >> 16);
@@ -825,7 +822,7 @@ static __INLINE uint8_t uint48_encode(uint64_t value, uint8_t * p_encoded_data)
  */
 static __INLINE uint16_t uint16_decode(const uint8_t * p_encoded_data)
 {
-        return ltoh_uint16_t( (((uint16_t)((uint8_t *)p_encoded_data)[0])) |
+        return ( (((uint16_t)((uint8_t *)p_encoded_data)[0])) |
                          (((uint16_t)((uint8_t *)p_encoded_data)[1]) << 8));
 }
 
@@ -868,7 +865,7 @@ static __INLINE uint32_t uint24_decode(const uint8_t * p_encoded_data)
  */
 static __INLINE uint32_t uint32_decode(const uint8_t * p_encoded_data)
 {
-    return ltoh_uint32_t( (((uint32_t)((uint8_t *)p_encoded_data)[0]) << 0) |
+    return ( (((uint32_t)((uint8_t *)p_encoded_data)[0]) << 0) |
                          (((uint32_t)((uint8_t *)p_encoded_data)[1]) << 8) |
                          (((uint32_t)((uint8_t *)p_encoded_data)[2]) << 16) |
                          (((uint32_t)((uint8_t *)p_encoded_data)[3]) << 24));
