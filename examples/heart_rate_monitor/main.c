@@ -760,7 +760,7 @@ int main(int argc, char * argv[])
 
     m_adapter =  adapter_init(serial_port, baud_rate);
     sd_rpc_log_handler_severity_filter_set(m_adapter, SD_RPC_LOG_INFO);
-    error_code = sd_rpc_open(m_adapter, status_handler, ble_evt_dispatch, log_handler);
+    error_code = sd_rpc_open(m_adapter, status_handler, ble_evt_dispatch, log_handler, NULL);
 
     if (error_code != NRF_SUCCESS)
     {
